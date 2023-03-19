@@ -2,7 +2,14 @@
 
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+# this function get the dictionary and the vale and return the key of the value
 import socket
+def get_key_by_value(my_dict, value):
+    for key, val in my_dict.items():
+        if val == value:
+            return key
+    return None
+
 clients = {}
 UDP_IP = '0.0.0.0'
 UDP_PORT = 9999
@@ -11,29 +18,27 @@ sock.bind((UDP_IP, UDP_PORT))
 while True:
     source, address = sock.recvfrom(1024)
     message = source.decode()
-    if message not in clients and address not in clients:
-        clients[message] = address
-        print(f'Added client {message}: {address}')
-    else:
-        if message not in clients and address in clients:
-            print(" ERROR there is no user with name: ", message)
+    if " " in message:
+        destination, message = message.split(' ', 1)
+        name_of_client = get_key_by_value(clients, address)
+        # go to the function and see if there are a client in the dictionary
+        if name_of_client is None:
+            sock.sendto(b'U cant send a message! Enter your name first', address)
         else:
-             if message in clients and clients[message] is not address:
-                print("the message has been send to: ", message)
-             else:
-                destination, message = message.split(' ', 1)
-                if destination in clients:
-                    destination_address = clients[destination]
-                    sock.sendto(message.encode(), destination_address)
-                    print(f'Sent message from {message} to {destination}: {message}')
-                else:
-                    sock.sendto(b'No such user', address)
-                    print(f'No such user: {destination}')
-
-    print(clients)
+            if destination in clients:
+                destination_address = clients[destination]
+                sock.sendto(b'U got message from ' + name_of_client.encode() + b' as:' + message.encode(), destination_address)
+                print(f'Sent message from {name_of_client} to {destination}: {message}')
+            else:
+                sock.sendto(b'No such user', address)
+                print(f'{name_of_client} is trying to send to a non-existent user: {destination}')
+    else:
+        if message not in clients and address not in clients:
+            clients[message] = address
+            print(f'Added client {message}: {address}')
 
 
-
+sock.close()
 
 
 
